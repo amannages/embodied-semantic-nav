@@ -1,11 +1,18 @@
 from ai2thor.controller import Controller
+import cv2
 
-# Initialize the simulator in headless mode for testing
-controller = Controller(scene="FloorPlan1", width=300, height=300)
-
-# Move the robot agent forward
+controller = Controller(scene="FloorPlan1")
 event = controller.step(action="MoveAhead")
 
-# Print the final coordinates
-print("Agent Position:", event.metadata["agent"]["position"])
-controller.stop()
+# Save the robot's current camera view
+frame = event.frame  # numpy array, shape (H, W, 3), RGB
+frame_bgr = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
+cv2.imwrite("view.png", frame_bgr)
+
+# Print position
+print("Position:", event.metadata["agent"]["position"])
+print("Frame shape:", frame.shape)
+
+# Also print all visible objects right now
+visible = [o["objectType"] for o in event.metadata["objects"] if o["visible"]]
+print("Visible objects:", visible)
