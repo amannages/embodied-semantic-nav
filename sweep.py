@@ -1,35 +1,35 @@
-#performs a 360 degree sweep of the room and saves 4 images of the room.
 from ai2thor.controller import Controller
 import cv2
 import os
 
-os.makedirs("sweep_images", exist_ok=True)
+os.makedirs("sweep_frames", exist_ok=True)
 
-controller = Controller(scene="FloorPlan1", agentMode="locobot", width=300, height=300)
+controller = Controller(scene="FloorPlan1")
 
-all_visible = {}
+all_visible = {}  # angle -> list of visible object types
 
 for i, angle in enumerate([0, 90, 180, 270]):
-    event = controller.step(action="RotateRight", degrees=angle)
-    
-    # Save the robot's current camera view
-    frame = event.frame  # numpy array, shape (H, W, 3), RGB
+    # Rotate to face each direction
+    if i > 0:
+        controller.step("RotateRight")  # each step = 90°
+
+    event = controller.step("Pass")  # no-op to get current frame + metadata
+
+    # Save frame
+    frame = event.frame
     frame_bgr = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
-    cv2.imwrite(f"sweep_images/view_{i}.png", frame_bgr)
+    cv2.imwrite(f"sweep_frames/angle_{angle}.png", frame_bgr)
 
-    # Print position
-    print(f"Position at angle {angle}:", event.metadata["agent"]["position"])
-    print("Frame shape:", frame.shape)
-
-    # Also print all visible objects right now
+    # Log visible objects
     visible = [o["objectType"] for o in event.metadata["objects"] if o["visible"]]
     all_visible[angle] = visible
-    print(f"Visible objects at angle {angle}:", visible)
+    print(f"\n--- {angle}° ---")
+    print(f"Visible: {visible}")
 
 print("\n=== FULL ROOM OBJECT INVENTORY ===")
-seen_objects = set()
-for angle, objects in all_visible.items():
-    for obj in objects:
-        seen_objects.add(obj)
+seen_all = set()
+for angle, objs in all_visible.items():
+    seen_all.update(objs)
+print(sorted(seen_all))
 
-print("All seen objects:", sorted(seen_objects))
+controller.stop()
