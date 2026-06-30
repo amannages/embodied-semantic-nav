@@ -38,5 +38,7 @@ for i, angle in enumerate([0, 90, 180, 270]):
     print(f"  YOLO detected:  {sorted(yolo_visible)}")
     print(f"  YOLO missed:    {sorted(gt_visible - yolo_visible)}")
     print(f"  YOLO invented:  {sorted(yolo_visible - gt_visible)}")  # false positives
+    # At the bottom of each angle's print block, add:
+    print(f"  Raw YOLO labels: {sorted(set(d['raw_label'] for d in detected_objects))}")
 
 controller.stop()

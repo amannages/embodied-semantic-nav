@@ -11,6 +11,43 @@ from ultralytics import YOLO
 import cv2
 import numpy as np
 
+# Maps COCO labels → semantic concepts
+# Left side: what YOLO outputs
+# Right side: what your robot's semantic map will store
+LABEL_MAP = {
+    # Kitchen appliances
+    "microwave":    "Microwave",
+    "oven":         "StoveKnob",   # YOLO sees oven when it sees stove area
+    "toaster":      "Toaster",
+    "refrigerator": "Fridge",
+    "sink":         "Sink",
+
+    # Objects
+    "apple":        "Apple",
+    "orange":       "Orange",
+    "banana":       "Banana",
+    "bowl":         "Bowl",
+    "cup":          "Cup",
+    "bottle":       "Bottle",
+    "knife":        "ButterKnife",
+    "book":         "Book",
+    "vase":         "Vase",
+    "potted plant": "HousePlant",
+
+    # Furniture
+    "chair":        "Chair",
+    "couch":        "Sofa",
+    "bed":          "Bed",
+    "dining table": "DiningTable",
+
+    # Ignore these — YOLO hallucinations on simulator geometry
+    # We'll filter them out entirely
+    "airplane":     None,
+    "suitcase":     None,
+    "train":        None,
+    "boat":         None,
+}
+
 class ObjectDetector:
     def __init__(self, model_size = "s", confidence_threshold = 0.3):
         """
@@ -34,12 +71,21 @@ class ObjectDetector:
             if confidence < self.confidence_threshold:
                 continue
 
-            label = results.names[int(box.cls[0])]
+            raw_label = results.names[int(box.cls[0])]
+
+            if raw_label in LABEL_MAP:
+                mapped = LABEL_MAP[raw_label]
+                if mapped is None: 
+                    continue  # ignore this label
+                label = mapped
+            else:
+                label = raw_label  # keep the original label if not in the map    
             # box.xyxy gives [x1, y1, x2, y2] in pixel coordinates
             x1, y1, x2, y2 = map(int, box.xyxy[0])
 
             detected_objects.append({
                 "label": label,
+                "raw_label": raw_label,
                 "confidence": confidence,
                 "bbox": [x1, y1, x2, y2]
             })

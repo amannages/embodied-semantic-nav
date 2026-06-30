@@ -1,0 +1,31 @@
+============================================================
+PERCEPTION VALIDATION: YOLO vs Ground Truth
+============================================================
+
+--- 0° ---
+  Ground truth:   ['Cabinet', 'CoffeeMachine', 'Fridge', 'Toaster']
+  YOLO detected:  []
+  YOLO missed:    ['Cabinet', 'CoffeeMachine', 'Fridge', 'Toaster']
+  YOLO invented:  []
+  Raw YOLO labels: []
+
+--- 90° ---
+  Ground truth:   ['GarbageCan']
+  YOLO detected:  []
+  YOLO missed:    ['GarbageCan']
+  YOLO invented:  []
+  Raw YOLO labels: []
+
+--- 180° ---
+  Ground truth:   ['Apple', 'Book', 'CounterTop', 'CreditCard', 'Floor']
+  YOLO detected:  []
+  YOLO missed:    ['Apple', 'Book', 'CounterTop', 'CreditCard', 'Floor']
+  YOLO invented:  []
+  Raw YOLO labels: []
+
+--- 270° ---
+  Ground truth:   ['Apple', 'Bread', 'ButterKnife', 'Cabinet', 'CoffeeMachine', 'CounterTop', 'Drawer', 'Floor', 'Toaster']
+  YOLO detected:  ['Bowl', 'Chair', 'HousePlant', 'Microwave', 'Sink', 'StoveKnob']
+  YOLO missed:    ['Apple', 'Bread', 'ButterKnife', 'Cabinet', 'CoffeeMachine', 'CounterTop', 'Drawer', 'Floor', 'Toaster']
+  YOLO invented:  ['Bowl', 'Chair', 'HousePlant', 'Microwave', 'Sink', 'StoveKnob']
+  Raw YOLO labels: ['bowl', 'chair', 'microwave', 'oven', 'potted plant', 'sink']
