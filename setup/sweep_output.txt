@@ -1,0 +1,15 @@
+
+--- 0° ---
+Visible: ['Cabinet', 'CoffeeMachine', 'Fridge', 'Toaster']
+
+--- 90° ---
+Visible: ['GarbageCan']
+
+--- 180° ---
+Visible: ['Apple', 'Book', 'CounterTop', 'CreditCard', 'Floor']
+
+--- 270° ---
+Visible: ['Apple', 'Bread', 'ButterKnife', 'Cabinet', 'Cabinet', 'CoffeeMachine', 'CounterTop', 'CounterTop', 'Drawer', 'Drawer', 'Drawer', 'Drawer', 'Floor', 'Toaster']
+
+=== FULL ROOM OBJECT INVENTORY ===
+['Apple', 'Book', 'Bread', 'ButterKnife', 'Cabinet', 'CoffeeMachine', 'CounterTop', 'CreditCard', 'Drawer', 'Floor', 'Fridge', 'GarbageCan', 'Toaster']
