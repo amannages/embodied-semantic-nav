@@ -5,16 +5,16 @@ DISTANCE-SENSITIVITY TEST: Approaching the 270°
 
 --- 1 ---
   Ground truth:   ['Bread', 'ButterKnife', 'Cabinet', 'CoffeeMachine', 'CounterTop', 'Drawer', 'Floor', 'Toaster']
-  YOLO detected:  ['Bottle', 'Bowl', 'Cup', 'HousePlant', 'StoveKnob', 'clock']
+  YOLO detected:  ['Bottle', 'Bowl', 'HousePlant', 'Mug', 'StoveKnob', 'clock']
   YOLO missed:    ['Bread', 'ButterKnife', 'Cabinet', 'CoffeeMachine', 'CounterTop', 'Drawer', 'Floor', 'Toaster']
-  YOLO invented:  ['Bottle', 'Bowl', 'Cup', 'HousePlant', 'StoveKnob', 'clock']
+  YOLO invented:  ['Bottle', 'Bowl', 'HousePlant', 'Mug', 'StoveKnob', 'clock']
   Raw YOLO labels: ['bottle', 'bowl', 'clock', 'cup', 'oven', 'potted plant']
 
 --- 2 ---
   Ground truth:   ['Bread', 'ButterKnife', 'CoffeeMachine', 'CounterTop', 'Drawer', 'Floor', 'Mug', 'Tomato', 'Window']
-  YOLO detected:  ['Bottle', 'Cup', 'HousePlant', 'Sink', 'StoveKnob']
-  YOLO missed:    ['Bread', 'ButterKnife', 'CoffeeMachine', 'CounterTop', 'Drawer', 'Floor', 'Mug', 'Tomato', 'Window']
-  YOLO invented:  ['Bottle', 'Cup', 'HousePlant', 'Sink', 'StoveKnob']
+  YOLO detected:  ['Bottle', 'HousePlant', 'Mug', 'Sink', 'StoveKnob']
+  YOLO missed:    ['Bread', 'ButterKnife', 'CoffeeMachine', 'CounterTop', 'Drawer', 'Floor', 'Tomato', 'Window']
+  YOLO invented:  ['Bottle', 'HousePlant', 'Sink', 'StoveKnob']
   Raw YOLO labels: ['bottle', 'cup', 'oven', 'potted plant', 'sink']
 
 --- 3 ---
@@ -26,14 +26,14 @@ DISTANCE-SENSITIVITY TEST: Approaching the 270°
 
 --- 4 ---
   Ground truth:   ['ButterKnife', 'Cabinet', 'CounterTop', 'Floor', 'Lettuce', 'SinkBasin', 'Tomato', 'Window']
-  YOLO detected:  ['Bottle', 'DiningTable', 'HousePlant', 'Microwave', 'Sink', 'StoveKnob', 'sports ball']
+  YOLO detected:  ['Bottle', 'DiningTable', 'HousePlant', 'Microwave', 'Sink', 'StoveKnob']
   YOLO missed:    ['ButterKnife', 'Cabinet', 'CounterTop', 'Floor', 'Lettuce', 'SinkBasin', 'Tomato', 'Window']
-  YOLO invented:  ['Bottle', 'DiningTable', 'HousePlant', 'Microwave', 'Sink', 'StoveKnob', 'sports ball']
-  Raw YOLO labels: ['bottle', 'dining table', 'microwave', 'oven', 'potted plant', 'sink', 'sports ball']
+  YOLO invented:  ['Bottle', 'DiningTable', 'HousePlant', 'Microwave', 'Sink', 'StoveKnob']
+  Raw YOLO labels: ['bottle', 'dining table', 'microwave', 'oven', 'potted plant', 'sink']
 
 --- 5 ---
   Ground truth:   ['Cabinet', 'CounterTop', 'Floor', 'SinkBasin', 'Window']
-  YOLO detected:  ['Bottle', 'HousePlant', 'Sink', 'StoveKnob']
+  YOLO detected:  ['Bottle', 'HousePlant', 'Microwave', 'Sink', 'StoveKnob']
   YOLO missed:    ['Cabinet', 'CounterTop', 'Floor', 'SinkBasin', 'Window']
-  YOLO invented:  ['Bottle', 'HousePlant', 'Sink', 'StoveKnob']
-  Raw YOLO labels: ['bottle', 'oven', 'potted plant', 'sink']
+  YOLO invented:  ['Bottle', 'HousePlant', 'Microwave', 'Sink', 'StoveKnob']
+  Raw YOLO labels: ['bottle', 'microwave', 'oven', 'potted plant', 'sink']

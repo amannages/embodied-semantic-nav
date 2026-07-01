@@ -15,37 +15,38 @@ import numpy as np
 # Left side: what YOLO outputs
 # Right side: what your robot's semantic map will store
 LABEL_MAP = {
-    # Kitchen appliances
-    "microwave":    "Microwave",
-    "oven":         "StoveKnob",   # YOLO sees oven when it sees stove area
-    "toaster":      "Toaster",
-    "refrigerator": "Fridge",
-    "sink":         "Sink",
+    # (mapped_name, reliability)
+    # reliability: 'high' = trust single detection
+    #              'low'  = require multi-frame confirmation
 
-    # Objects
-    "apple":        "Apple",
-    "orange":       "Orange",
-    "banana":       "Banana",
-    "bowl":         "Bowl",
-    "cup":          "Cup",
-    "bottle":       "Bottle",
-    "knife":        "ButterKnife",
-    "book":         "Book",
-    "vase":         "Vase",
-    "potted plant": "HousePlant",
+    "microwave":    ("Microwave",    "high"),
+    "oven":         ("StoveKnob",    "high"),
+    "toaster":      ("Toaster",      "high"),
+    "refrigerator": ("Fridge",       "high"),
+    "sink":         ("Sink",         "high"),
+    "potted plant": ("HousePlant",   "high"),
+    "couch":        ("Sofa",         "high"),
+    "chair":        ("Chair",        "high"),
+    "bed":          ("Bed",          "high"),
+    "dining table": ("DiningTable",  "high"),
+    "tv":           ("Television",   "high"),
 
-    # Furniture
-    "chair":        "Chair",
-    "couch":        "Sofa",
-    "bed":          "Bed",
-    "dining table": "DiningTable",
+    "apple":        ("Apple",        "low"),
+    "orange":       ("Orange",       "low"),
+    "banana":       ("Banana",       "low"),
+    "bowl":         ("Bowl",         "low"),
+    "cup":          ("Mug",          "low"),   # YOLO calls mugs 'cup'
+    "bottle":       ("Bottle",       "low"),
+    "knife":        ("ButterKnife",  "low"),
+    "book":         ("Book",         "low"),
+    "vase":         ("Vase",         "low"),
 
-    # Ignore these — YOLO hallucinations on simulator geometry
-    # We'll filter them out entirely
-    "airplane":     None,
-    "suitcase":     None,
-    "train":        None,
-    "boat":         None,
+    # Known hallucinations on simulator geometry — drop entirely
+    "airplane":     (None, None),
+    "suitcase":     (None, None),
+    "train":        (None, None),
+    "boat":         (None, None),
+    "sports ball":  (None, None),
 }
 
 class ObjectDetector:
@@ -74,12 +75,13 @@ class ObjectDetector:
             raw_label = results.names[int(box.cls[0])]
 
             if raw_label in LABEL_MAP:
-                mapped = LABEL_MAP[raw_label]
+                mapped, reliability = LABEL_MAP[raw_label]
                 if mapped is None: 
                     continue  # ignore this label
                 label = mapped
             else:
                 label = raw_label  # keep the original label if not in the map    
+                reliability = "low"  # default to low reliability for unmapped labels
             # box.xyxy gives [x1, y1, x2, y2] in pixel coordinates
             x1, y1, x2, y2 = map(int, box.xyxy[0])
 
@@ -87,6 +89,7 @@ class ObjectDetector:
                 "label": label,
                 "raw_label": raw_label,
                 "confidence": confidence,
+                "reliability": reliability,
                 "bbox": [x1, y1, x2, y2]
             })
         
