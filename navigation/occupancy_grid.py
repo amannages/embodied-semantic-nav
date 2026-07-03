@@ -29,9 +29,32 @@ class OccupancyGrid:
         # we would like our robot to start at the center of the grid
         self.origin = np.array([width // 2, height // 2])  
 
-    def update(self, x, y, state):
-        if 0 <= x < self.width and 0 <= y < self.height:
-            self.grid[y, x] = state
+    # ---------------------------------------------------------------------------
+    # Coordinate Conversion Functions
+    # ---------------------------------------------------------------------------
+    def world_to_grid(self, x, z):
+        """
+        Convert AI2-THOR world coordinates (x, z) to grid indices (row, col).
+
+        Why x, z and not x, y? Because in AI2-THOR, 
+        x = left/right
+        y = up/down (ignoring it because we are going to do 2D mapping (imagine looking down from the ceiling))
+        z = forward/backward
+        """
+        col = int(round(x / self.resolution) + self.origin[0])
+        row = int(round(z / self.resolution) + self.origin[1])
+        # clamp to grid boundaries so that we do not ever go outside of range
+        row = np.clip(row, 0, self.height - 1)
+        col = np.clip(col, 0, self.width - 1)
+        return row, col
+    
+    def grid_to_world(self, row, col):
+        """
+        Convert grid indices (row, col) to AI2-THOR world coordinates (x, z).
+        """
+        x = (col - self.origin[0]) * self.resolution
+        z = (row - self.origin[1]) * self.resolution
+        return x, z
 
     def visualize(self):
         plt.imshow(self.grid, cmap='gray', origin='lower')
