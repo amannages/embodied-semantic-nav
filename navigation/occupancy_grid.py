@@ -55,6 +55,14 @@ class OccupancyGrid:
         x = (col - self.origin[0]) * self.resolution
         z = (row - self.origin[1]) * self.resolution
         return x, z
+    
+    #---------------------------------------------------------------------------
+    # Marking Cells in the Grid Functions
+    #---------------------------------------------------------------------------
+    def mark_free(self, x, z):
+        row, col = self.world_to_grid(x, z)
+        self.grid[row, col] = FREE
+
 
     def visualize(self):
         plt.imshow(self.grid, cmap='gray', origin='lower')
