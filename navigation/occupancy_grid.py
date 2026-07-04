@@ -5,7 +5,7 @@
 
 import numpy as np
 import matplotlib.pyplot as plt
-import matplotlib.patches as patches #this is for drawing rectangles on the plot
+import matplotlib.patches as mpatches #this is for drawing rectangles on the plot
 
 UNKNOWN = 0
 FREE = 1
@@ -106,11 +106,77 @@ class OccupancyGrid:
                 if self.grid[row, col] != OCCUPIED:  # Only mark as free if not already occupied
                     self.grid[row, col] = FREE
 
-    def visualize(self):
-        plt.imshow(self.grid, cmap='gray', origin='lower')
-        plt.colorbar(ticks=[UNKNOWN, FREE, OCCUPIED], label='Occupancy State')
-        plt.clim(-0.5, 2.5)
-        plt.title('Occupancy Grid')
-        plt.xlabel('X')
-        plt.ylabel('Y')
-        plt.show()
+    #---------------------------------------------------------------------------
+    # Querying Cells in the Grid Functions
+    #---------------------------------------------------------------------------
+    def is_free(self, x, z):
+        row, col = self.world_to_grid(x, z)
+        return self.grid[row, col] == FREE
+
+    def is_occupied(self, x, z):
+        row, col = self.world_to_grid(x, z)
+        return self.grid[row, col] == OCCUPIED
+
+    def get_cell(self, x, z):
+        row, col = self.world_to_grid(x, z)
+        return self.grid[row, col]
+    
+    #---------------------------------------------------------------------------
+    # Visualization Function
+    #---------------------------------------------------------------------------
+    def visualize(self, agent_pos=None, path=None, save_path=None):
+        """
+        Function to render the occupancy grid as a color image.
+        Color Code:
+        - Black: Unknown
+        - White: Free
+        - Red: Occupied
+        - Blue: Robot's current position
+        - Yellow: Planned Path
+        """
+
+        # Build RGB image from the occupancy grid
+        rgb = np.zeros((self.height, self.width, 3), dtype=np.uint8)
+        rgb[self.grid == UNKNOWN] = [0, 0, 0]       # Black for unknown
+        rgb[self.grid == FREE] = [255, 255, 255]  # White for free
+        rgb[self.grid == OCCUPIED] = [255, 0, 0]    # Red for occupied
+
+        # Draw planned path (if it exists)
+        if path is not None:
+            for (row, col) in path:
+                if 0 <= row < self.height and 0 <= col < self.width:
+                    rgb[row, col] = [255, 255, 0] # yellow = planned path
+
+        # Draw agent's current position (if it exists)
+        if agent_pos is not None:
+            agent_row, agent_col = self.world_to_grid(*agent_pos)
+            # Draw a small cross for the agent
+            for dr in range(-2, 3):
+                for dc in range(-2, 3):
+                    nr, nc = agent_row + dr, agent_col + dc
+                    if 0 <= nr < self.height and 0 <= nc < self.width:
+                        rgb[nr, nc] = [0, 0, 255] # blue = agent's position
+
+        # Display the image
+        figure, axis = plt.subplots(1, 1, figsize=(8, 8))
+        axis.imshow(rgb, origin='upper')
+        axis.set_title("Occupancy Grid")
+        axis.axis('off')
+
+        # Build Legend
+        patches = [
+            mpatches.Patch(color='black', label='Unknown'),
+            mpatches.Patch(color='white', label='Free'),
+            mpatches.Patch(color='red', label='Occupied'),
+            mpatches.Patch(color='blue', label="Agent's Position"),
+            mpatches.Patch(color='yellow', label='Planned Path')
+        ]
+        if path:
+            patches.append(mpatches.Patch(color=[1, 0.86, 0], label='Planned Path'))  # Yellow for planned path
+        axis.legend(handles=patches, loc='upper right', fontsize=8)
+
+        if save_path:
+            plt.savefig(save_path, dpi=150, bbox_inches='tight')
+            plt.close()
+        else:
+            plt.show()
