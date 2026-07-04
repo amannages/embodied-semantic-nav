@@ -63,6 +63,48 @@ class OccupancyGrid:
         row, col = self.world_to_grid(x, z)
         self.grid[row, col] = FREE
 
+    def mark_occupied(self, x, z):
+        row, col = self.world_to_grid(x, z)
+        self.grid[row, col] = OCCUPIED
+
+    def mark_free_path(self, start_x, start_z, end_x, end_z):
+        """
+        Mark all cells along a straight line path as free.
+        We will use Bresenham's line algorithm to determine which cells to mark.
+
+        We can only use this when we know that everything between x_start, z_start and x_end, z_end is free. 
+        This is the case when we have a depth camera and we are marking the path to an object that we can see.
+        """
+        start_row, start_col = self.world_to_grid(start_x, start_z)
+        end_row, end_col = self.world_to_grid(end_x, end_z)
+
+        # Bresenham's line algorithm
+        cells = []
+        diff_row = abs(end_row - start_row)
+        diff_col = abs(end_col - start_col)
+        row = start_row
+        col = start_col
+        step_row = 1 if start_row < end_row else -1 # else -1 in case we are going "backwards"
+        step_col = 1 if start_col < end_col else -1
+        error = diff_row - diff_col
+
+        # Loop until we reach the end cell
+        while True:
+            cells.append((row, col))
+            if row == end_row and col == end_col: # navigated to the end cell
+                break
+            error2 = error * 2
+            if error2 > -diff_col:
+                error -= diff_col
+                row += step_row
+            if error2 < diff_row:
+                error += diff_row
+                col += step_col
+
+        for row, col in cells:
+            if 0 <= row < self.height and 0 <= col < self.width:
+                if self.grid[row, col] != OCCUPIED:  # Only mark as free if not already occupied
+                    self.grid[row, col] = FREE
 
     def visualize(self):
         plt.imshow(self.grid, cmap='gray', origin='lower')
