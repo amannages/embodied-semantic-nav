@@ -66,3 +66,89 @@ class Navigator:
     # Basic Movement Functions
     #---------------------------------------------------------------------------
     
+    def move_ahead(self):
+        """
+        Move the robot ahead by 0.25m in the direction it is currently facing.
+        """
+        event = self.controller.step(action="MoveAhead")
+        if event.metadata['lastActionSuccess']:
+            self.sync_from_event(event)
+        else:
+            # If the move failed, something is blocking the robot.
+            # So we mark the cell in front of the robot as occupied.
+            dx, dz = DIRECTION_VECTORS[self.agent_yaw]
+            blocked_x = self.agent_x + dx * self.occupancy_grid.resolution
+            blocked_z = self.agent_z + dz * self.occupancy_grid.resolution
+            self.occupancy_grid.mark_occupied(blocked_x, blocked_z)
+        self.step_count += 1
+        return event
+    
+    def rotate_left(self):
+        """
+        Rotate the robot left by 90 degrees.
+        """
+        event = self.controller.step(action="RotateLeft")
+        if event.metadata['lastActionSuccess']:
+            self.sync_from_event(event)
+        self.step_count += 1
+        return event
+    
+    def rotate_right(self):
+        """
+        Rotate the robot right by 90 degrees.
+        """
+        event = self.controller.step(action="RotateRight")
+        if event.metadata['lastActionSuccess']:
+            self.sync_from_event(event)
+        self.step_count += 1
+        return event
+    
+    #---------------------------------------------------------------------------
+    # Rotation Optimization Functions
+    #---------------------------------------------------------------------------   
+
+    def face_direction(self, target_yaw):
+        """
+        Rotate the robot to face a specific yaw anle (0, 90, 180, 270 degrees).
+        Choose the shortest rotation direction (left or right).
+        """
+        target_yaw = target_yaw % 360  # Normalize target yaw to [0, 360)
+        
+        while self.agent_yaw != target_yaw:
+            # We calculate the diff in yaw
+            diff = (target_yaw - self.agent_yaw) % 360
+            if diff == 0:
+                break # facing right direction
+            elif diff <= 180:
+                self.rotate_right()
+            else:
+                self.rotate_left()
+
+    def face_toward(self, target_x, target_z):
+        """
+        Rotate the robot to face toward a specific world coordinate (target_x, target_z).
+        """
+        dx = target_x - self.agent_x
+        dz = target_z - self.agent_z
+        # atan gives us the angle in radians, we convert to degrees and normalize to [0, 360)
+        angle = math.degrees(math.atan2(dx, dz)) % 360
+        snapped = int(round(angle / 90) * 90) % 360  # Snap to nearest 90 degrees
+        self.face_direction(snapped)
+
+    #---------------------------------------------------------------------------
+    # Scan Current Position Functions
+    #---------------------------------------------------------------------------
+
+    def scan_360(self):
+        """
+        Rotate the robot 360 degrees in 90 degree increments, scanning the environment.
+        After each rotation, we mark the current position as free in the occupancy grid.
+        Also returns all frames captured, which will be useful for integrating into YOLO.
+        """
+        frames = []
+        for _ in range(4):
+            event = self.rotate_right()
+            self.occupancy_grid.mark_free(self.agent_x, self.agent_z)
+            frames.append(event.frame)
+        return frames
+        
