@@ -151,4 +151,61 @@ class Navigator:
             self.occupancy_grid.mark_free(self.agent_x, self.agent_z)
             frames.append(event.frame)
         return frames
+    
+    # -------------------------------------------------------------------------
+    # High-level Functions: move toward a grid cell and run the frontier exploration
+    # -------------------------------------------------------------------------
+
+    def move_toward_cell(self, target_row, target_col):
+        """
+        Take one step toward a target grid cell.
+        Faces toward it, then moves ahead.
+        Returns True if move succeeded.
+        """
+        target_x, target_z = self.occupancy_grid.grid_to_world(target_row, target_col)
+        self.face_toward(target_x, target_z)
+        event = self.move_ahead()
+        return event.metadata["lastActionSuccess"]
+    
+    def explore(self, max_steps=200, on_step=None):
+        """
+        Main exploration loop, keeps moving toward frontiers 
+        until none remain or max_steps hit.
+
+        on_step: optional callback called after each move with (event, navigator)
+        We will use this to run YOLO on each frame in Phase 4+.
+        """
+        # Initialize: Sync Starting Position
+        event = self.controller.step("Pass")
+        self.sync_from_event(event)
+        self.occupancy_grid.mark_free(self.agent_x, self.agent_z)
+
+        print(f"Starting exploration at ({self.agent_x:.2f}, {self.agent_z:.2f})")
+
+        while self.step_count < max_steps:
+            # find newest frontier
+            frontier = self.frontier_explorer.nearest_frontier(self.agent_x, self.agent_z)
+
+            if frontier is None:
+                print("Exploration Complete: No Frontiers Remain")
+
+            fr, fc = frontier
+            fx, fz = self.occupancy_grid.grid_to_world(fr, fc)
+            print(f"Step {self.step_count:3d} | "
+                  f"Agent: ({self.agent_x:.2f}, {self.agent_z:.2f}) | "
+                  f"→ Frontier: ({fx:.2f}, {fz:.2f}) | "
+                  f"Frontiers left: {self.explorer.frontier_count()}")
+            
+            # We take one step towards the frontier
+            success = self.move_toward_cell(fr, fc)
+
+            # Run our optional callback (For YOLO, semantic map, etc.)
+            if on_step is not None:
+                event = self.controller.step("Pass")
+                on_step(event, self)
+
+        print(f"Exploration ended after {self.step_count} steps.")
+        return self.occupancy_grid
+    
+
         
