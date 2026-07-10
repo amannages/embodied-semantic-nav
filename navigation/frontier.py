@@ -25,7 +25,8 @@ class FrontierExplorer:
         Returns a list of (row, col) tuples of grid indices of frontier cells.
         """
         g = self.grid.grid
-        size = self.grid.width * self.grid.height
+        height = self.grid.height
+        width = self.grid.width
         frontiers = []
 
         # vectorized approach to find frontiers
@@ -34,9 +35,9 @@ class FrontierExplorer:
         for row, col in zip(free_rows, free_cols):
             # Check all 8 neighbors
             row_min = max(row - 1, 0)
-            row_max = min(size - 1, row + 1)
+            row_max = min(row + 1, height - 1)
             col_min = max(col - 1, 0)
-            col_max = min(size - 1, col + 1)
+            col_max = min(col + 1, width - 1) 
 
             neighborhood = g[row_min:row_max + 1, col_min:col_max + 1]
 
@@ -46,7 +47,7 @@ class FrontierExplorer:
             
         return frontiers
     
-    def nearest_frontier(self, agent_x, agent_z):
+    def nearest_frontier(self, agent_x, agent_z, min_distance_cells=2):
         """
         Find the nearest frontier cell to the robots current position (agent_x, agent_z) 
         in world coordinates. Uses euclidan distance in grid space.
@@ -56,16 +57,26 @@ class FrontierExplorer:
         """
         frontiers = self.find_frontiers()
         if not frontiers:
-            return None 
-        
+            return None
+
         agent_row, agent_col = self.grid.world_to_grid(agent_x, agent_z)
         agent_pos = np.array([agent_row, agent_col])
 
         frontier_array = np.array(frontiers)
         distances = np.linalg.norm(frontier_array - agent_pos, axis=1)
-        nearest_index = np.argmin(distances)
+        
+        # Filter out frontiers too close to the agent
+        valid = distances >= min_distance_cells
+        if not valid.any():
+            # All frontiers are adjacent — robot is surrounded by its own explored cells
+            # Fall back to nearest regardless (exploration nearly done)
+            valid = np.ones(len(distances), dtype=bool)
 
-        return frontiers[nearest_index]
+        valid_distances = distances.copy()
+        valid_distances[~valid] = np.inf
+        nearest_idx = np.argmin(valid_distances)
+
+        return frontiers[nearest_idx]
     
     def frontier_count(self):
         """

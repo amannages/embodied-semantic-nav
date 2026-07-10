@@ -4,8 +4,6 @@
 # with weither what it has seen is free or occupied.
 
 import numpy as np
-import matplotlib.pyplot as plt
-import matplotlib.patches as mpatches #this is for drawing rectangles on the plot
 
 UNKNOWN = 0
 FREE = 1
@@ -101,7 +99,9 @@ class OccupancyGrid:
                 error += diff_row
                 col += step_col
 
-        for row, col in cells:
+        cells_to_mark = cells[:-1] if len(cells) > 1 else cells
+
+        for row, col in cells_to_mark:
             if 0 <= row < self.height and 0 <= col < self.width:
                 if self.grid[row, col] != OCCUPIED:  # Only mark as free if not already occupied
                     self.grid[row, col] = FREE
@@ -127,6 +127,11 @@ class OccupancyGrid:
     def visualize(self, agent_pos=None, path=None, save_path=None):
         """
         Function to render the occupancy grid as a color image.
+        """
+        import matplotlib.pyplot as plt
+        import matplotlib.patches as mpatches
+
+        """
         Color Code:
         - Black: Unknown
         - White: Free

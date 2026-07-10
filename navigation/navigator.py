@@ -40,8 +40,8 @@ class Navigator:
         self.agent_x, self.agent_z = 0.0, 0.0  # Agent's position in world coordinates
         self.agent_yaw = 0.0  # Agent's orientation in degrees (0° = facing +z)
 
-
         self.step_count = 0
+        self.last_frontier = None
 
     #---------------------------------------------------------------------------
     # State Synchronization Functions
@@ -57,10 +57,10 @@ class Navigator:
 
         self.agent_x = position['x']
         self.agent_z = position['z']
-        self.agent_yaw = rotation['y'] % 360  # Normalize yaw to [0, 360)
+        self.agent_yaw = int(round(rotation['y'])) % 360
 
-        # Mark the current position as free in the occupancy grid
         self.occupancy_grid.mark_free(self.agent_x, self.agent_z)
+        self.update_map_from_event(event) 
 
     #---------------------------------------------------------------------------
     # Basic Movement Functions
@@ -76,7 +76,7 @@ class Navigator:
         else:
             # If the move failed, something is blocking the robot.
             # So we mark the cell in front of the robot as occupied.
-            dx, dz = DIRECTION_VECTORS[self.agent_yaw]
+            dx, dz = DIRECTION_VECTORS[int(self.agent_yaw)]
             blocked_x = self.agent_x + dx * self.occupancy_grid.resolution
             blocked_z = self.agent_z + dz * self.occupancy_grid.resolution
             self.occupancy_grid.mark_occupied(blocked_x, blocked_z)
@@ -148,7 +148,7 @@ class Navigator:
         frames = []
         for _ in range(4):
             event = self.rotate_right()
-            self.occupancy_grid.mark_free(self.agent_x, self.agent_z)
+            self.update_map_from_event(event)   
             frames.append(event.frame)
         return frames
     
@@ -167,45 +167,226 @@ class Navigator:
         event = self.move_ahead()
         return event.metadata["lastActionSuccess"]
     
-    def explore(self, max_steps=200, on_step=None):
+    def update_map_from_event(self, event):
         """
-        Main exploration loop, keeps moving toward frontiers 
-        until none remain or max_steps hit.
+        Use AI2-THOR's visibility metadata to mark free space via ray-casting.
+        Every visible object tells us the line-of-sight from agent to object is free.
+        """
+        agent_x = self.agent_x
+        agent_z = self.agent_z
 
-        on_step: optional callback called after each move with (event, navigator)
-        We will use this to run YOLO on each frame in Phase 4+.
+        for obj in event.metadata["objects"]:
+            if not obj["visible"]:
+                continue
+
+            obj_pos = obj.get("position")
+            if obj_pos is None:
+                continue
+
+            obj_x = obj_pos["x"]
+            obj_z = obj_pos["z"]
+
+            # Ray-cast: mark everything between agent and object as free
+            self.occupancy_grid.mark_free_path(agent_x, agent_z, obj_x, obj_z)
+
+        # Also mark current cell explicitly
+        self.occupancy_grid.mark_free(agent_x, agent_z)
+    
+    def find_path_bfs(self, target_row, target_col):
         """
-        # Initialize: Sync Starting Position
+        BFS through non-occupied cells to find a walkable path from current
+        position to target. Navigates through both FREE and UNKNOWN cells —
+        unknown doesn't mean blocked, it just means unvisited.
+        
+        Returns: list of (row, col) cells to visit (excluding start cell),
+                or None if the target is completely unreachable.
+        """
+        from collections import deque
+
+        start_row, start_col = self.occupancy_grid.world_to_grid(
+            self.agent_x, self.agent_z
+        )
+
+        if start_row == target_row and start_col == target_col:
+            return []
+
+        height = self.occupancy_grid.height
+        width  = self.occupancy_grid.width
+        grid   = self.occupancy_grid.grid
+
+        # visited maps cell → parent cell, so we can reconstruct the path
+        visited = {(start_row, start_col): None}
+        queue   = deque([(start_row, start_col)])
+
+        while queue:
+            r, c = queue.popleft()
+
+            if r == target_row and c == target_col:
+                # Reconstruct path by walking parent pointers back to start
+                path = []
+                current = (r, c)
+                while visited[current] is not None:
+                    path.append(current)
+                    current = visited[current]
+                path.reverse()  # start → target order
+                return path
+
+            # Only 4-directional moves — matches robot's discrete action space
+            for dr, dc in [(0, 1), (0, -1), (1, 0), (-1, 0)]:
+                nr, nc = r + dr, c + dc
+                if (0 <= nr < height and
+                    0 <= nc < width  and
+                    (nr, nc) not in visited and
+                    grid[nr, nc] != OCCUPIED):   # can traverse FREE or UNKNOWN
+                    visited[(nr, nc)] = (r, c)
+                    queue.append((nr, nc))
+
+        return None  # target is surrounded by occupied cells — truly unreachable
+
+    # Replace exact equality checks with distance tolerance
+    def _at_frontier(self, fr, fc, tolerance=1.5):
+        cur_r, cur_c = self.occupancy_grid.world_to_grid(
+            self.agent_x, self.agent_z
+        )
+        return math.sqrt((cur_r - fr)**2 + (cur_c - fc)**2) < tolerance
+
+    def count_unknown_neighbors(self, row, col):
+        grid = self.occupancy_grid.grid
+        height = self.occupancy_grid.height
+        width = self.occupancy_grid.width
+        count = 0
+        for dr, dc in [(0, 1), (0, -1), (1, 0), (-1, 0), (1, 1), (1, -1), (-1, 1), (-1, -1)]:
+            nr, nc = row + dr, col + dc
+            if 0 <= nr < height and 0 <= nc < width and grid[nr, nc] == UNKNOWN:
+                count += 1
+        return count
+
+    def explore(self, max_steps=200, on_step=None):
+        import numpy as np
+
+        # Initialize
         event = self.controller.step("Pass")
         self.sync_from_event(event)
         self.occupancy_grid.mark_free(self.agent_x, self.agent_z)
 
+        print("Initial 360° scan...")
+        self.scan_360()
         print(f"Starting exploration at ({self.agent_x:.2f}, {self.agent_z:.2f})")
 
+        blacklisted = set()
+
         while self.step_count < max_steps:
-            # find newest frontier
-            frontier = self.frontier_explorer.nearest_frontier(self.agent_x, self.agent_z)
+            # --- Pick a frontier ---
+            all_frontiers  = self.frontier_explorer.find_frontiers()
+            valid_frontiers = [f for f in all_frontiers if f not in blacklisted]
 
-            if frontier is None:
-                print("Exploration Complete: No Frontiers Remain")
+            if not valid_frontiers:
+                print("✅ Exploration complete — no reachable frontiers remain.")
+                break
 
-            fr, fc = frontier
+            # Sort by distance, then choose the most informative reachable frontier
+            agent_row, agent_col = self.occupancy_grid.world_to_grid(
+                self.agent_x, self.agent_z
+            )
+            agent_pos_arr = np.array([agent_row, agent_col])
+            frontier_arr  = np.array(valid_frontiers)
+            dists = np.linalg.norm(frontier_arr - agent_pos_arr, axis=1)
+            sorted_indices = np.argsort(dists)
+
+            scored_frontiers = []
+            for idx in sorted_indices:
+                fr, fc = valid_frontiers[idx]
+                if dists[idx] < 1.5:
+                    continue
+                if self.last_frontier is not None and (fr, fc) == self.last_frontier:
+                    continue
+
+                path = self.find_path_bfs(fr, fc)
+                if path is None or len(path) == 0:
+                    continue
+
+                score = (
+                    self.count_unknown_neighbors(fr, fc),
+                    -len(path),
+                    -dists[idx]
+                )
+                scored_frontiers.append((score, fr, fc, path))
+
+            if not scored_frontiers:
+                # If every frontier was skipped due to last_frontier or distance, accept the nearest reachable frontier.
+                for idx in sorted_indices:
+                    fr, fc = valid_frontiers[idx]
+                    if dists[idx] < 1.5:
+                        continue
+                    path = self.find_path_bfs(fr, fc)
+                    if path is not None and len(path) > 0:
+                        scored_frontiers.append(((0, -len(path), -dists[idx]), fr, fc, path))
+                        break
+
+            if not scored_frontiers:
+                print("✅ No BFS-reachable frontiers remain.")
+                break
+
+            scored_frontiers.sort(reverse=True)
+            _, fr, fc, chosen_path = scored_frontiers[0]
+            self.last_frontier = (fr, fc)
             fx, fz = self.occupancy_grid.grid_to_world(fr, fc)
-            print(f"Step {self.step_count:3d} | "
-                  f"Agent: ({self.agent_x:.2f}, {self.agent_z:.2f}) | "
-                  f"→ Frontier: ({fx:.2f}, {fz:.2f}) | "
-                  f"Frontiers left: {self.explorer.frontier_count()}")
-            
-            # We take one step towards the frontier
-            success = self.move_toward_cell(fr, fc)
 
-            # Run our optional callback (For YOLO, semantic map, etc.)
-            if on_step is not None:
-                event = self.controller.step("Pass")
-                on_step(event, self)
+            print(f"Step {self.step_count:3d} | "
+                f"Agent: ({self.agent_x:.2f}, {self.agent_z:.2f}) | "
+                f"→ Frontier: ({fx:.2f}, {fz:.2f}) | "
+                f"Path: {len(chosen_path)} steps | "
+                f"Valid: {len(valid_frontiers)} | "
+                f"Blacklisted: {len(blacklisted)}")
+
+            # --- Follow the BFS path step by step ---
+            reached = False
+            path_index = 0
+            while path_index < len(chosen_path) and self.step_count < max_steps:
+                step_r, step_c = chosen_path[path_index]
+
+                cur_r, cur_c = self.occupancy_grid.world_to_grid(
+                    self.agent_x, self.agent_z
+                )
+                if cur_r == fr and cur_c == fc:
+                    reached = True
+                    break
+
+                success = self.move_toward_cell(step_r, step_c)
+
+                if on_step is not None:
+                    ev = self.controller.step("Pass")
+                    on_step(ev, self)
+
+                if not success:
+                    new_path = self.find_path_bfs(fr, fc)
+                    if new_path is None:
+                        print(f"  ⛔ Blacklisting ({fx:.2f}, {fz:.2f}) — blocked after replan")
+                        blacklisted.add((fr, fc))
+                        self.occupancy_grid.mark_occupied(fx, fz)
+                        break
+                    chosen_path = new_path
+                    path_index = 0
+                    continue
+
+                path_index += 1
+
+            if not reached:
+                cur_r, cur_c = self.occupancy_grid.world_to_grid(
+                    self.agent_x, self.agent_z
+                )
+                if cur_r == fr and cur_c == fc:
+                    reached = True
+
+            if reached:
+                self.scan_360()
+
+            if not reached and (fr, fc) not in blacklisted:
+                print(f"  ⛔ Blacklisting ({fx:.2f}, {fz:.2f}) — path exhausted")
+                blacklisted.add((fr, fc))
+                self.occupancy_grid.mark_occupied(fx, fz)
 
         print(f"Exploration ended after {self.step_count} steps.")
         return self.occupancy_grid
-    
 
         

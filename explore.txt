@@ -1,0 +1,10 @@
+Initial 360° scan...
+Starting exploration at (-1.00, 1.00)
+Step   4 | Agent: (-1.00, 1.00) | → Frontier: (-1.75, 1.75) | Path: 6 steps | Valid: 32 | Blacklisted: 0
+  ⛔ Blacklisting (-1.75, 1.75) — blocked after replan
+Step  19 | Agent: (-1.50, 1.75) | → Frontier: (-0.50, -0.25) | Path: 12 steps | Valid: 34 | Blacklisted: 1
+  ⛔ Blacklisting (-0.50, -0.25) — blocked after replan
+Step 157 | Agent: (-1.00, 0.75) | → Frontier: (-1.75, -2.25) | Path: 15 steps | Valid: 74 | Blacklisted: 2
+  ⛔ Blacklisting (-1.75, -2.25) — path exhausted
+Exploration ended after 401 steps.
+Map saved to explored_map.png
