@@ -324,7 +324,7 @@ class Navigator:
                         break
 
             if not scored_frontiers:
-                print("✅ No BFS-reachable frontiers remain.")
+                print("No BFS-reachable frontiers remain.")
                 break
 
             scored_frontiers.sort(reverse=True)
@@ -361,7 +361,7 @@ class Navigator:
                 if not success:
                     new_path = self.find_path_bfs(fr, fc)
                     if new_path is None:
-                        print(f"  ⛔ Blacklisting ({fx:.2f}, {fz:.2f}) — blocked after replan")
+                        print(f"Blacklisting ({fx:.2f}, {fz:.2f}) - blocked after replan")
                         blacklisted.add((fr, fc))
                         self.occupancy_grid.mark_occupied(fx, fz)
                         break
@@ -382,7 +382,7 @@ class Navigator:
                 self.scan_360()
 
             if not reached and (fr, fc) not in blacklisted:
-                print(f"  ⛔ Blacklisting ({fx:.2f}, {fz:.2f}) — path exhausted")
+                print(f"Blacklisting ({fx:.2f}, {fz:.2f}) - path exhausted")
                 blacklisted.add((fr, fc))
                 self.occupancy_grid.mark_occupied(fx, fz)
 
