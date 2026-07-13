@@ -19,6 +19,11 @@ class SemanticMap:
         col = int(np.clip(col, 0, self.width - 1))
         return row, col
 
+    def grid_to_world(self, row, col):
+        x = (col - self.origin[0]) * self.resolution
+        z = (row - self.origin[1]) * self.resolution
+        return x, z
+
     def _get_cell(self, row, col):
         key = (row, col)
         if key not in self.grid:
@@ -62,6 +67,56 @@ class SemanticMap:
         if label not in self.sightings:
             return None
         return max(self.sightings[label], key=lambda s: s["confidence"])
+
+    def _iter_label_cells(self, label):
+        for (row, col), cell in self.grid.items():
+            if label in cell:
+                yield row, col, cell[label]
+
+    def cells_containing(self, label):
+        """
+        Return all grid cells that have observed the given label.
+        """
+        cells = []
+        for row, col, data in self._iter_label_cells(label):
+            x, z = self.grid_to_world(row, col)
+            cells.append({
+                "row": row,
+                "col": col,
+                "position": (x, z),
+                "confidence": data["confidence"],
+                "count": data["count"],
+            })
+        return cells
+
+    def nearest_cell_with_label(self, label, agent_x, agent_z):
+        """
+        Return the closest grid cell containing the label to the agent position.
+        """
+        cells = self.cells_containing(label)
+        if not cells:
+            return None
+
+        agent_row, agent_col = self.world_to_grid(agent_x, agent_z)
+
+        def cell_distance(cell):
+            return (cell["row"] - agent_row) ** 2 + (cell["col"] - agent_col) ** 2
+
+        best_cell = min(cells, key=cell_distance)
+        best_cell = dict(best_cell)
+        best_cell["distance_cells"] = float(cell_distance(best_cell) ** 0.5)
+        return best_cell
+
+    def best_known_location(self, label):
+        """
+        Return the strongest grid cell for a label based on confidence, then count.
+        """
+        cells = self.cells_containing(label)
+        if not cells:
+            return None
+
+        best_cell = max(cells, key=lambda cell: (cell["confidence"], cell["count"]))
+        return best_cell
 
     def get_cell_confidence(self, label, row, col):
         cell = self.grid.get((row, col), {})

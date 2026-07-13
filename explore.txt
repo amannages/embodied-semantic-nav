@@ -9,12 +9,12 @@ Blacklisting (-1.75, -2.25) - path exhausted
 Exploration ended after 401 steps.
 
 === SEMANTIC MAP ===
-  Bed                  | seen   2x | best conf: 0.47 | best pos: (-0.00, -1.25)
+  Bed                  | seen   2x | best conf: 0.46 | best pos: (-0.00, -1.25)
   Book                 | seen   1x | best conf: 0.48 | best pos: (0.25, 1.25)
   Bottle               | seen  27x | best conf: 0.71 | best pos: (-0.50, -1.25)
   Bowl                 | seen  24x | best conf: 0.88 | best pos: (-1.00, -1.75)
   Chair                | seen   5x | best conf: 0.65 | best pos: (-1.25, -1.25)
-  DiningTable          | seen   8x | best conf: 0.56 | best pos: (0.75, 1.25)
+  DiningTable          | seen   8x | best conf: 0.57 | best pos: (0.75, 1.25)
   Fridge               | seen  33x | best conf: 0.97 | best pos: (1.00, -0.25)
   HousePlant           | seen  45x | best conf: 0.94 | best pos: (-1.25, -1.50)
   Microwave            | seen  30x | best conf: 0.87 | best pos: (-0.25, -1.75)
@@ -31,13 +31,13 @@ Exploration ended after 401 steps.
   kite                 | seen   5x | best conf: 0.85 | best pos: (0.50, -1.25)
   laptop               | seen   2x | best conf: 0.66 | best pos: (-1.25, 0.50)
   mouse                | seen   2x | best conf: 0.93 | best pos: (0.00, -1.25)
-  person               | seen   2x | best conf: 0.54 | best pos: (-0.50, -1.25)
-  snowboard            | seen   1x | best conf: 0.59 | best pos: (-0.25, -1.25)
+  person               | seen   2x | best conf: 0.55 | best pos: (-0.50, -1.25)
+  snowboard            | seen   1x | best conf: 0.58 | best pos: (-0.25, -1.25)
   stop sign            | seen   6x | best conf: 0.41 | best pos: (-1.00, 0.50)
   surfboard            | seen   3x | best conf: 0.57 | best pos: (-0.25, -1.25)
   toilet               | seen   1x | best conf: 0.54 | best pos: (-1.25, -1.50)
   traffic light        | seen   2x | best conf: 0.54 | best pos: (-0.25, 1.25)
-  umbrella             | seen   1x | best conf: 0.40 | best pos: (-1.00, 0.25)
+  umbrella             | seen   3x | best conf: 0.40 | best pos: (-1.00, 0.25)
 ===================
 
 Map saved to explored_map.png
