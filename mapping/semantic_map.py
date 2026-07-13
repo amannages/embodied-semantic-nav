@@ -126,6 +126,23 @@ class SemanticMap:
 
     def has_seen(self, label):
         return label in self.sightings
+    
+    def reliable_labels(self, min_confidence=0.7, min_sightings=5):
+        """
+        Returns only labels the robot is genuinely confident about.
+        Filters out hallucinations from simulator geometry.
+        """
+        reliable = {}
+        for label, sightings in self.sightings.items():
+            best_conf = max(s["confidence"] for s in sightings)
+            if best_conf >= min_confidence and len(sightings) >= min_sightings:
+                reliable[label] = {
+                    "best_confidence": best_conf,
+                    "sighting_count": len(sightings),
+                    "best_position": max(sightings, 
+                        key=lambda s: s["confidence"])["position"]
+                }
+        return reliable
 
     def summary(self):
         print("\n=== SEMANTIC MAP ===")
