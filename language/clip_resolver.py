@@ -90,5 +90,86 @@ class CLIPResolver:
                 prompted = f"a photo of a {label.lower()} in a kitchen"
                 self._label_cache[label] = self.encode_text(prompted)
             label_vectors.append(self._label_cache[label])
-
         
+        # Stack into a single matrix: (num_labels, 512)
+        label_matrix = torch.cat(label_vectors, dim=0)
+
+        # Cosine similarity: query (1, 512) @ label_matrix.T (512, num_labels)
+        similarities = (query_vector @ label_matrix.T).squeeze(0)
+        similarities = similarities.cpu().numpy()
+
+        # Build ranking
+        ranking = sorted(
+            zip(candidate_labels, similarities.tolist()),
+            key=lambda x: x[1],
+            reverse=True
+        )
+
+        best_label, best_score = ranking[0]
+
+        if verbose:
+            print(f"\nCLIP Query: '{query}'")
+            print(f"Top matches:")
+            for label, score in ranking[:5]:
+                bar = "█" * int(score * 50)
+                print(f"  {label:20s} {score:.3f} {bar}")
+
+        return best_label, best_score, ranking
+    
+    #---------------------------------------------------------------------------
+    # Image-Based Label Resolution Functions
+    #---------------------------------------------------------------------------
+    def resolve_from_image(self, image, candidate_labels, verbose=True):
+        """
+        Given a raw RGB image and a list of candidate object labels,
+        return the label that best matches the image semantically.
+
+        It works by the following:
+        1. Encode the image into a CLIP image vector.
+        2. Encode each label into a CLIP text vector (with a prompt template).
+        3. Compute cosine similarity between the image vector and each label vector.
+        4. Return the label with the highest similarity score.
+
+        candidate_labels: list of strings representing the semantic map's known labels
+        Returns: (best_label, confidence_score, full_ranking)
+        """
+        if not candidate_labels:
+            return None, 0.0, []
+        
+        # Encode the image
+        image_vector = self.encode_image(image)
+
+        # Encode each candidate label (with a prompt template)
+        label_vectors = []
+        for label in candidate_labels:
+            if label not in self._label_cache:
+                prompted = f"a photo of a {label.lower()} in a kitchen"
+                self._label_cache[label] = self.encode_text(prompted)
+            label_vectors.append(self._label_cache[label])
+        
+        # Stack into a single matrix: (num_labels, 512)
+        label_matrix = torch.cat(label_vectors, dim=0)
+
+        # Cosine similarity: image (1, 512) @ label_matrix.T (512, num_labels)
+        similarities = (image_vector @ label_matrix.T).squeeze(0)
+        similarities = similarities.cpu().numpy()
+
+        # Build ranking
+        ranking = sorted(
+            zip(candidate_labels, similarities.tolist()),
+            key=lambda x: x[1],
+            reverse=True
+        )
+
+        best_label, best_score = ranking[0]
+
+        if verbose:
+            print(f"\nImage-based resolution:")
+            print(f"Top matches:")
+            for label, score in ranking[:5]:
+                bar = "█" * int(score * 50)
+                print(f"  {label:20s} {score:.3f} {bar}")
+
+        return best_label, best_score, ranking
+
+    
