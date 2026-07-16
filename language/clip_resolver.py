@@ -60,29 +60,35 @@ class CLIPResolver:
     #---------------------------------------------------------------------------
     # Label Resolution Functions
     #---------------------------------------------------------------------------
-    def resolve_label(self, query, candidate_labels):
+    def resolve_label(self, query, candidate_labels, verbose=True):
         """
-        Given a natural language query and a list of candidate labels,
-        return the label that best matches the query using CLIP.
+        Given a natural language query and a list of candidate object labels,
+        return the label that best matches the query semantically.
+
+        It works by the following:
+        1. Encode the query into a CLIP text vector.
+        2. Encode each label into a CLIP text vector (with a prompt template).
+        3. Compute cosine similarity between the query vector and each label vector.
+        4. Return the label with the highest similarity score.
+
+        candidate_labels: list of strings representing the semantic map's known labels
+        Returns: (best_label, confidence_score, full_ranking)
         """
+        if not candidate_labels:
+            return None, 0.0, []
+        
         # Encode the query
         query_vector = self.encode_text(query)
 
-        # Encode candidate labels (cache them for efficiency)
+        # Encode each candidate label (with a prompt template)
+        # We use a prompt template to give CLIP context:
+        # "a photo of a mug" works better than just "mug"
+        # because CLIP was trained on image captions, not bare nouns
         label_vectors = []
         for label in candidate_labels:
             if label not in self._label_cache:
-                self._label_cache[label] = self.encode_text(label)
+                prompted = f"a photo of a {label.lower()} in a kitchen"
+                self._label_cache[label] = self.encode_text(prompted)
             label_vectors.append(self._label_cache[label])
-        
-        # Stack label vectors into a single tensor
-        label_vectors = torch.cat(label_vectors, dim=0)
 
-        # Compute cosine similarity between query and each label
-        similarities = (query_vector @ label_vectors.T).squeeze(0)  # shape: (num_labels,)
-
-        # Find the index of the best matching label
-        best_index = similarities.argmax().item()
-        best_label = candidate_labels[best_index]
         
-        return best_label, similarities[best_index].item()
