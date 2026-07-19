@@ -50,12 +50,33 @@ class GoalNavigator:
 
     def locate_target(self, label):
         """
-        Given a semantic label, find the best known position in the semantic map.
-        Returns (x, z) coordinates in world space, or None if not found.
+        Query the semantic map for the best known position of the given label.
+        Uses nearest_cell_with_label to find the most reliable location relative to the 
+        agent's current position.
         """
-        best_location = self.semantic_map.best_known_location(label)
-        if best_location is None:
+        cell = self.semantic_map.nearest_cell_with_label(
+            label, 
+            agent_x=self.nav.agent_x, 
+            agent_z=self.nav.agent_z
+        )
+
+        if cell is None:
             print(f"No known location for label '{label}' in the semantic map.")
             return None
-        return best_location["position"]
+        
+        print(f"\nTarget '{label}' last seen at "
+              f"({cell['position'][0]:.2f}, {cell['position'][1]:.2f}) "
+              f"with confidence {cell['confidence']:.2f}")
+
+        return cell
+    
+    #---------------------------------------------------------------------------
+    # Step 3: Navigate to Target Position
+    #---------------------------------------------------------------------------
+
+    def navigate_to_cell(self, target_row, target_col, target_label, max_steps=100):
+        """
+        
+        """
+        
     
