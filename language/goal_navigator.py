@@ -76,7 +76,32 @@ class GoalNavigator:
 
     def navigate_to_cell(self, target_row, target_col, target_label, max_steps=100):
         """
-        
+        BFS navigation to the target cell in the occupancy grid.
+        Returns True if the target was reached, False otherwise.
         """
-        
-    
+        print(f"\nNavigating to '{target_label}' at grid cell ({target_row}, {target_col})...")
+
+        steps = 0
+        while steps < max_steps:
+            # Check if we are close enough to the target cell (or already there)
+            current_row, current_col = self.nav.world_to_grid(self.nav.agent_x, self.nav.agent_z)
+            distance = math.sqrt((current_row - target_row) ** 2 + (current_col - target_col) ** 2)
+
+            if distance < 2.0:
+                print(f"Close enough to target cell ({target_row}, {target_col}). Stopping navigation.")
+                break
+
+            # Use BFS to find the next step towards the target cell
+            path = self.nav.bfs_path_to_cell(target_row, target_col)
+            if path is None:
+                print("No path found to the target cell. Stopping navigation.")
+                return False
+            
+            # Move to the next cell in the path
+            for step_row, step_col in path:
+                if steps >= max_steps:
+                    print("Reached maximum navigation steps. Stopping.")
+                    break
+
+                # Check if target is already visible from current position
+                event = self.nav.controller.step(action="Pass")  # Get current frame
