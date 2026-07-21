@@ -105,3 +105,69 @@ class GoalNavigator:
 
                 # Check if target is already visible from current position
                 event = self.nav.controller.step(action="Pass")  # Get current frame
+                frame = event.frame
+                detections = self.detector.detect_objects(frame)
+                labels_in_view = [d["label"] for d in detections]
+
+                if target_label in labels_in_view:
+                    confidence = max(
+                        d["confidence"] for d in detections 
+                        if d["label"] == target_label
+                    )
+                    print(f"Target '{target_label}' detected in view with confidence {confidence:.2f}. Stopping navigation.")
+                    return True
+                
+                # Move to the next cell
+                success = self.nav.move_to_cell(step_row, step_col)
+                steps += 1
+
+                if not success:
+                    break # Replan on Next Outer Loop Iteration
+
+        # Final check if target is visible after navigation
+        print("At final position, checking for target visibility...")
+        frames = self.nav.scan_360()
+
+        for frame in frames:
+            detections = self.detector.detect_objects(frame)
+            labels_in_view = [d["label"] for d in detections]
+
+            if target_label in labels_in_view:
+                confidence = max(
+                    d["confidence"] for d in detections 
+                    if d["label"] == target_label
+                )
+                print(f"Target '{target_label}' detected in view with confidence {confidence:.2f}.")
+                return True
+            
+        print(f" Reached final position but target '{target_label}' not detected. Navigation complete.")
+        return False
+    
+    #---------------------------------------------------------------------------
+    # Full Pipeline: Resolve Goal -> Locate Target -> Navigate
+    #---------------------------------------------------------------------------
+
+    def execute_goal(self, user_query):
+        """
+        Full pipeline to execute a natural language goal:
+        1. Resolve the goal to a semantic label using CLIP.
+        2. Locate the best known position of that label in the semantic map.
+        3. Navigate to that position using BFS in the occupancy grid.
+        """
+        # Step 1: Resolve Goal
+        label, score = self.resolve_goal(user_query)
+        if label is None:
+            print("Could not resolve goal. Exiting.")
+            return False
+        
+        # Step 2: Locate Target
+        cell = self.locate_target(label)
+        if cell is None:
+            print("Could not locate target. Exiting.")
+            return False
+        
+        target_row, target_col = cell["row"], cell["col"]
+
+        # Step 3: Navigate to Target
+        success = self.navigate_to_cell(target_row, target_col, label)
+        return success
