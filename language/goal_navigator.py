@@ -153,12 +153,19 @@ class GoalNavigator:
         1. Resolve the goal to a semantic label using CLIP.
         2. Locate the best known position of that label in the semantic map.
         3. Navigate to that position using BFS in the occupancy grid.
+        4. Visual confirmation of the target object if detected.
         """
+        print(f"\n{'='*60}")
+        print(f"GOAL: '{user_query}'")
+        print(f"{'='*60}")
+
         # Step 1: Resolve Goal
         label, score = self.resolve_goal(user_query)
         if label is None:
             print("Could not resolve goal. Exiting.")
             return False
+        
+        print(f"\nResolved to: '{label}' (CLIP score: {score:.3f})")
         
         # Step 2: Locate Target
         cell = self.locate_target(label)
@@ -167,7 +174,17 @@ class GoalNavigator:
             return False
         
         target_row, target_col = cell["row"], cell["col"]
+        print(f"Target located at: ({target_row}, {target_col})")
 
         # Step 3: Navigate to Target
+        print("Navigating to target...")
         success = self.navigate_to_cell(target_row, target_col, label)
+
+        print(f"\n{'='*60}")
+        if success:
+            print(f"Goal complete: Found '{label}'")
+        else:
+            print(f"Goal incomplete: Could not confirm '{label}'")
+        print(f"{'='*60}\n")
+
         return success
