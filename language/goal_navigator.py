@@ -32,7 +32,7 @@ class GoalNavigator:
         known_labels = list(self.semantic_map.reliable_labels(
             min_confidence=0.7, 
             min_sightings=5
-        )).keys()
+        ))
 
         if not known_labels:
             print("Semantic map is empty. Please explore first.")
@@ -84,7 +84,7 @@ class GoalNavigator:
         steps = 0
         while steps < max_steps:
             # Check if we are close enough to the target cell (or already there)
-            current_row, current_col = self.nav.world_to_grid(self.nav.agent_x, self.nav.agent_z)
+            current_row, current_col = self.nav.occupancy_grid.world_to_grid(self.nav.agent_x, self.nav.agent_z)
             distance = math.sqrt((current_row - target_row) ** 2 + (current_col - target_col) ** 2)
 
             if distance < 2.0:
@@ -92,7 +92,7 @@ class GoalNavigator:
                 break
 
             # Use BFS to find the next step towards the target cell
-            path = self.nav.bfs_path_to_cell(target_row, target_col)
+            path = self.nav.find_path_bfs(target_row, target_col)
             if path is None:
                 print("No path found to the target cell. Stopping navigation.")
                 return False
@@ -118,7 +118,7 @@ class GoalNavigator:
                     return True
                 
                 # Move to the next cell
-                success = self.nav.move_to_cell(step_row, step_col)
+                success = self.nav.move_toward_cell(step_row, step_col)
                 steps += 1
 
                 if not success:

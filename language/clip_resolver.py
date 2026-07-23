@@ -14,7 +14,7 @@ class CLIPResolver:
         Loads CLIP ViT-B/32, we dont need B/16 for finer details.
         """
         if device is None:
-            if torch.backend.mps.is_available():
+            if torch.backends.mps.is_available():
                 self.device = 'cpu'
             elif torch.cuda.is_available():
                 self.device = 'cuda'
