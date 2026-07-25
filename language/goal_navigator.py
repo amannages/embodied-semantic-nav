@@ -54,11 +54,9 @@ class GoalNavigator:
         Uses nearest_cell_with_label to find the most reliable location relative to the 
         agent's current position.
         """
-        cell = self.semantic_map.nearest_cell_with_label(
-            label, 
-            agent_x=self.nav.agent_x, 
-            agent_z=self.nav.agent_z
-        )
+        # Use best known location (highest confidence + count)
+        # instead of nearest sighting, since quality of detection is more important than proximity
+        cell = self.semantic_map.best_known_location(label) 
 
         if cell is None:
             print(f"No known location for label '{label}' in the semantic map.")
