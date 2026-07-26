@@ -14,13 +14,13 @@ Blacklisting (-1.75, -2.25) - path exhausted
 Exploration ended after 401 steps.
 
 === SEMANTIC MAP ===
-  Bed                  | seen   2x | best conf: 0.44 | best pos: (-0.00, -1.25)
-  Book                 | seen   1x | best conf: 0.48 | best pos: (0.25, 1.25)
+  Bed                  | seen   2x | best conf: 0.45 | best pos: (-0.00, -1.25)
+  Book                 | seen   1x | best conf: 0.46 | best pos: (0.25, 1.25)
   Bottle               | seen  27x | best conf: 0.71 | best pos: (-0.50, -1.25)
   Bowl                 | seen  24x | best conf: 0.88 | best pos: (-1.00, -1.75)
   Chair                | seen   5x | best conf: 0.65 | best pos: (-1.25, -1.25)
   DiningTable          | seen   8x | best conf: 0.57 | best pos: (0.75, 1.25)
-  Fridge               | seen  35x | best conf: 0.97 | best pos: (1.00, -0.25)
+  Fridge               | seen  33x | best conf: 0.97 | best pos: (1.00, -0.25)
   HousePlant           | seen  45x | best conf: 0.94 | best pos: (-1.25, -1.50)
   Microwave            | seen  30x | best conf: 0.87 | best pos: (-0.25, -1.75)
   Mug                  | seen   7x | best conf: 0.81 | best pos: (-1.00, -1.25)
@@ -31,18 +31,18 @@ Exploration ended after 401 steps.
   Vase                 | seen   7x | best conf: 0.74 | best pos: (-1.25, -1.75)
   bench                | seen  12x | best conf: 0.81 | best pos: (0.00, 2.00)
   cake                 | seen   1x | best conf: 0.76 | best pos: (0.75, 1.25)
-  clock                | seen   2x | best conf: 0.71 | best pos: (2.00, -1.25)
+  clock                | seen   2x | best conf: 0.70 | best pos: (2.00, -1.25)
   keyboard             | seen   2x | best conf: 0.76 | best pos: (-1.25, -1.50)
   kite                 | seen   5x | best conf: 0.86 | best pos: (0.50, -1.25)
   laptop               | seen   2x | best conf: 0.67 | best pos: (-1.25, 0.50)
   mouse                | seen   2x | best conf: 0.93 | best pos: (0.00, -1.25)
-  person               | seen   1x | best conf: 0.54 | best pos: (-0.50, -1.25)
-  snowboard            | seen   1x | best conf: 0.60 | best pos: (-0.25, -1.25)
-  stop sign            | seen   5x | best conf: 0.43 | best pos: (-1.00, 0.00)
+  person               | seen   2x | best conf: 0.54 | best pos: (-0.50, -1.25)
+  snowboard            | seen   1x | best conf: 0.58 | best pos: (-0.25, -1.25)
+  stop sign            | seen   5x | best conf: 0.41 | best pos: (-1.00, 0.00)
   surfboard            | seen   3x | best conf: 0.57 | best pos: (-0.25, -1.25)
   toilet               | seen   1x | best conf: 0.54 | best pos: (-1.25, -1.50)
   traffic light        | seen   2x | best conf: 0.54 | best pos: (-0.25, 1.25)
-  umbrella             | seen   1x | best conf: 0.41 | best pos: (-1.00, 0.25)
+  umbrella             | seen   1x | best conf: 0.40 | best pos: (-1.00, 0.25)
 ===================
 
 ============================================================
@@ -63,17 +63,15 @@ Top matches:
 
 Resolved to: 'Fridge' (CLIP score: 0.902)
 
-Target 'Fridge' last seen at (1.50, 1.25) with confidence 0.87
-Target located at: (55, 56)
+Target 'Fridge' last seen at (1.00, -0.25) with confidence 0.97
+Target located at: (49, 54)
 Navigating to target...
 
-Navigating to 'Fridge' at grid cell (55, 56)...
-Close enough to target cell (55, 56). Stopping navigation.
-At final position, checking for target visibility...
- Reached final position but target 'Fridge' not detected. Navigation complete.
+Navigating to 'Fridge' at grid cell (49, 54)...
+Target 'Fridge' detected in view with confidence 0.72. Stopping navigation.
 
 ============================================================
-Goal incomplete: Could not confirm 'Fridge'
+Goal complete: Found 'Fridge'
 ============================================================
 
 
@@ -89,21 +87,10 @@ Top matches:
   StoveKnob            0.717 ███████████████████████████████████
   Fridge               0.713 ███████████████████████████████████
 
-Resolved to: 'Mug' (CLIP score: 0.774)
-
-Target 'Mug' last seen at (1.25, 0.25) with confidence 0.48
-Target located at: (51, 55)
-Navigating to target...
-
-Navigating to 'Mug' at grid cell (51, 55)...
-Close enough to target cell (51, 55). Stopping navigation.
-At final position, checking for target visibility...
-Target 'Mug' detected in view with confidence 0.48.
-
-============================================================
-Goal complete: Found 'Mug'
-============================================================
-
+ CLIP confidence too low (score=0.774, gap=0.007)
+   Top candidates: ['Mug', 'Bottle', 'Bowl']
+   Try a more specific query.
+Could not resolve goal. Exiting.
 
 ============================================================
 GOAL: 'something used to cook food'
@@ -117,21 +104,10 @@ Top matches:
   Microwave            0.775 ██████████████████████████████████████
   StoveKnob            0.773 ██████████████████████████████████████
 
-Resolved to: 'Bowl' (CLIP score: 0.789)
-
-Target 'Bowl' last seen at (1.25, 0.50) with confidence 0.78
-Target located at: (52, 55)
-Navigating to target...
-
-Navigating to 'Bowl' at grid cell (52, 55)...
-Close enough to target cell (52, 55). Stopping navigation.
-At final position, checking for target visibility...
- Reached final position but target 'Bowl' not detected. Navigation complete.
-
-============================================================
-Goal incomplete: Could not confirm 'Bowl'
-============================================================
-
+ CLIP confidence too low (score=0.789, gap=0.005)
+   Top candidates: ['Bowl', 'Mug', 'Bottle']
+   Try a more specific query.
+Could not resolve goal. Exiting.
 
 ============================================================
 GOAL: 'a household appliance'
@@ -145,18 +121,7 @@ Top matches:
   Fridge               0.755 █████████████████████████████████████
   Bottle               0.750 █████████████████████████████████████
 
-Resolved to: 'Mug' (CLIP score: 0.775)
-
-Target 'Mug' last seen at (1.25, 0.25) with confidence 0.48
-Target located at: (51, 55)
-Navigating to target...
-
-Navigating to 'Mug' at grid cell (51, 55)...
-Close enough to target cell (51, 55). Stopping navigation.
-At final position, checking for target visibility...
-Target 'Mug' detected in view with confidence 0.48.
-
-============================================================
-Goal complete: Found 'Mug'
-============================================================
-
+ CLIP confidence too low (score=0.775, gap=0.000)
+   Top candidates: ['Mug', 'StoveKnob', 'Microwave']
+   Try a more specific query.
+Could not resolve goal. Exiting.
