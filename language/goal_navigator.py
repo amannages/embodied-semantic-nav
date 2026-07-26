@@ -22,7 +22,7 @@ class GoalNavigator:
     # Step 1: Resolve Natural Language Query to Semantic Label
     #---------------------------------------------------------------------------
 
-    def resolve_goal(self, user_query):
+    def resolve_goal(self, user_query, min_score=0.80, min_gap=0.02):
         """
         Use CLIP to map natural language goal to the best label in
         the semantic map.
@@ -34,13 +34,22 @@ class GoalNavigator:
             min_sightings=5
         ))
 
-        if not known_labels:
-            print("Semantic map is empty. Please explore first.")
-            return None, 0.0
-        
+        # Added better prompt engineering for wider queries, added a confidence gate
         best_label, score, ranking = self.clip.resolve_label(
             user_query, known_labels, verbose=True
         )
+
+        # Check confidence and separation from second place
+        if len(ranking) > 2:
+            gap = ranking[0][1] - ranking[1][1]
+        else:
+            gap = 1.0
+
+        if score < min_score or gap < min_gap:
+            print(f"\n CLIP confidence too low (score={score:.3f}, gap={gap:.3f})")
+            print(f"   Top candidates: {[r[0] for r in ranking[:3]]}")
+            print(f"   Try a more specific query.")
+            return None, score
 
         return best_label, score
     
