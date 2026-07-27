@@ -18,6 +18,24 @@ class GoalNavigator:
         self.clip = clip_resolver
         self.detector = detector
 
+    def candidate_labels(self):
+        """
+        Build the CLIP candidate set from the detector ontology plus any reliable labels already in the map.
+        """
+        labels = []
+
+        if hasattr(self.detector, "supported_labels"):
+            labels.extend(self.detector.supported_labels())
+
+        reliable = self.semantic_map.reliable_labels(
+            min_confidence=0.7,
+            min_sightings=5,
+        )
+        labels.extend(reliable.keys())
+
+        deduped = list(dict.fromkeys(labels))
+        return deduped
+
     #---------------------------------------------------------------------------
     # Step 1: Resolve Natural Language Query to Semantic Label
     #---------------------------------------------------------------------------
@@ -25,14 +43,13 @@ class GoalNavigator:
     def resolve_goal(self, user_query, min_score=0.80, min_gap=0.02):
         """
         Use CLIP to map natural language goal to the best label in
-        the semantic map.
-
-        Will only consider labels that have been seen in the semantic map.
+        the detector ontology plus reliable labels already seen in the semantic map.
         """
-        known_labels = list(self.semantic_map.reliable_labels(
-            min_confidence=0.7, 
-            min_sightings=5
-        ))
+        known_labels = self.candidate_labels()
+
+        if not known_labels:
+            print("No candidate labels available for CLIP resolution.")
+            return None, 0.0
 
         # Added better prompt engineering for wider queries, added a confidence gate
         best_label, score, ranking = self.clip.resolve_label(
@@ -76,6 +93,33 @@ class GoalNavigator:
               f"with confidence {cell['confidence']:.2f}")
 
         return cell
+
+    def search_until_target_found(self, target_label, max_steps=200):
+        """
+        Explore until the target label is observed in the semantic map or the budget is exhausted.
+        Returns the best known cell for the label, or None if the label was never observed.
+        """
+        found = {"seen": False}
+
+        def on_step(event, nav):
+            detections = self.detector.detect_objects(event.frame)
+            self.semantic_map.update(detections, nav.agent_x, nav.agent_z)
+
+            if any(det["label"] == target_label for det in detections):
+                found["seen"] = True
+                print(f"Target '{target_label}' observed during exploration.")
+                return True
+
+            return False
+
+        print(f"Target '{target_label}' not yet in map. Exploring until it appears...")
+        self.nav.explore(max_steps=max_steps, on_step=on_step)
+
+        if not found["seen"]:
+            print(f"Target '{target_label}' was not observed during exploration.")
+            return None
+
+        return self.semantic_map.best_known_location(target_label)
     
     #---------------------------------------------------------------------------
     # Step 3: Navigate to Target Position
@@ -174,11 +218,13 @@ class GoalNavigator:
         
         print(f"\nResolved to: '{label}' (CLIP score: {score:.3f})")
         
-        # Step 2: Locate Target
+        # Step 2: Locate Target, or explore until it appears
         cell = self.locate_target(label)
         if cell is None:
-            print("Could not locate target. Exiting.")
-            return False
+            cell = self.search_until_target_found(label)
+            if cell is None:
+                print("Could not locate target after exploration. Exiting.")
+                return False
         
         target_row, target_col = cell["row"], cell["col"]
         print(f"Target located at: ({target_row}, {target_col})")

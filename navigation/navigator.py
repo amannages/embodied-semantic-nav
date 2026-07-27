@@ -139,18 +139,22 @@ class Navigator:
     # Scan Current Position Functions
     #---------------------------------------------------------------------------
 
-    def scan_360(self):
+    def scan_360(self, on_frame=None):
         """
         Rotate the robot 360 degrees in 90 degree increments, scanning the environment.
         After each rotation, we mark the current position as free in the occupancy grid.
         Also returns all frames captured, which will be useful for integrating into YOLO.
         """
         frames = []
+        stopped_early = False
         for _ in range(4):
             event = self.rotate_right()
             self.update_map_from_event(event)   
             frames.append(event.frame)
-        return frames
+            if on_frame is not None and on_frame(event, self):
+                stopped_early = True
+                break
+        return frames, stopped_early
     
     # -------------------------------------------------------------------------
     # High-level Functions: move toward a grid cell and run the frontier exploration
@@ -270,7 +274,10 @@ class Navigator:
         self.occupancy_grid.mark_free(self.agent_x, self.agent_z)
 
         print("Initial 360° scan...")
-        self.scan_360()
+        _, stopped_early = self.scan_360(on_frame=on_step)
+        if stopped_early:
+            print("Exploration stopped during initial scan.")
+            return self.occupancy_grid
         print(f"Starting exploration at ({self.agent_x:.2f}, {self.agent_z:.2f})")
 
         blacklisted = set()
@@ -356,7 +363,9 @@ class Navigator:
 
                 if on_step is not None:
                     ev = self.controller.step("Pass")
-                    on_step(ev, self)
+                    if on_step(ev, self):
+                        print("Exploration stopped by callback.")
+                        return self.occupancy_grid
 
                 if not success:
                     new_path = self.find_path_bfs(fr, fc)
@@ -379,7 +388,10 @@ class Navigator:
                     reached = True
 
             if reached:
-                self.scan_360()
+                _, stopped_early = self.scan_360(on_frame=on_step)
+                if stopped_early:
+                    print("Exploration stopped during frontier scan.")
+                    return self.occupancy_grid
 
             if not reached and (fr, fc) not in blacklisted:
                 print(f"Blacklisting ({fx:.2f}, {fz:.2f}) - path exhausted")

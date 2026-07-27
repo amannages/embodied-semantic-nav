@@ -58,6 +58,13 @@ class ObjectDetector:
         self.model = YOLO(f"yolov8{model_size}.pt")
         self.confidence_threshold = confidence_threshold
 
+    def supported_labels(self):
+        """
+        Return the semantic labels this detector can produce after mapping.
+        """
+        labels = sorted({mapped for mapped, reliability in LABEL_MAP.values() if mapped is not None})
+        return labels
+
     def detect_objects(self, image):
         """
         image: numpy array (H, W, 3) in RGB (this is exactly what ai2thor gives us)
