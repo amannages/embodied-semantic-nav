@@ -1,87 +1,155 @@
-# Semantic Indoor Navigation for Embodied Household Assistants
+# Embodied Semantic Navigation
 
-[![Python](https://shields.io)](https://python.org)
-[![Framework](https://shields.io)](https://allenai.org)
-[![AI](https://shields.io)](https://github.com)
+Autonomous embodied navigation in AI2-THOR with an exploration stack that builds an occupancy grid, a semantic memory of observed objects, and a language-to-goal layer for natural-language navigation.
 
-An autonomous navigation system for embodied robotic agents inside simulated household environments. This project combines deep computer vision models with topological mapping to enable robots to locate, navigate to, and interact with objects using natural semantic commands.
+The project started as frontier-based exploration and grew into a pipeline that can:
 
----
+* explore an unknown indoor scene,
+* detect and record objects with YOLO,
+* store those detections in a semantic map,
+* resolve natural-language requests with CLIP,
+* and navigate to the best known location of the requested object.
 
-## 📌 Project Overview
+## Current Status
 
-Traditional robotic navigation relies heavily on geometric maps (point clouds and grids) which lack semantic understanding of the world. This project implements **Semantic Mapping and Navigation**, allowing an embodied assistant to understand *what* objects are and *where* they sit in context. 
+This repository is organized around the following phases:
 
-Instead of moving blindly to coordinates, the agent utilizes a visual-language approach to understand commands like *"find the coffee mug on the kitchen counter"* and independently plans an optimal path using simulated sensor data.
+* Phase 3: frontier exploration + occupancy-grid navigation
+* Phase 4: perception wiring + semantic map construction
+* Phase 5: CLIP-based language goal resolution + goal-directed navigation
+* Phase 6: polish, demo capture, and portfolio presentation
 
-### Key Features
-*   **Active Perception:** Real-time object detection using YOLOv8 and open-vocabulary scene understanding using CLIP.
-*   **Simulated Embodiment:** High-fidelity physics and photo-realistic interactions powered by the AI2-THOR simulator.
-*   **Semantic Mapping:** Graph-based topological mapping (NetworkX) tracking spatial relationships between household objects.
-*   **Path Planning:** Intelligent pathing utilizing a mixture of frontier exploration and semantic visual cues.
+## Pipeline
 
----
+```mermaid
+flowchart LR
+	A[User query\n"Find something I can drink from"] --> B[CLIP text encoding]
+	B --> C[Semantic label ranking]
+	C --> D[Best label\n"Mug"]
+	D --> E[SemanticMap lookup]
+	E --> F[Best known cell\nor nearest matching cell]
+	F --> G[Navigator BFS]
+	G --> H[AI2-THOR movement]
+	H --> I[Goal reached / target confirmed]
 
-## 🏗️ Project Architecture
+	J[AI2-THOR frame stream] --> K[YOLOv8 detector]
+	K --> L[SemanticMap update]
+	L --> E
+
+	M[Frontier explorer] --> N[Occupancy grid]
+	N --> G
+```
+
+## Repository Layout
 
 ```text
-├── config/             # Environment and model hyperparameters
-├── data/               # Saved maps, trajectories, and evaluation logs
-├── models/             # Custom network definitions, YOLO weights, and CLIP hooks
-├── src/
-│   ├── controller.py   # AI2-THOR environment wrappers and agent API
-│   ├── mapping.py      # Semantic and topological graph generation
-│   ├── perception.py   # Object detection and visual feature extraction
-│   └── planning.py     # Navigation algorithms and heuristic policies
-├── tests/              # Unit testing for environment and models
-├── README.md           # Project documentation
-└── requirements.txt    # Python dependencies
+embodied-semantic-nav/
+├── explore.py              # exploration demo + semantic mapping run
+├── goal_seek.py            # end-to-end language goal demo
+├── navigation/
+│   ├── frontier.py         # frontier detection
+│   ├── navigator.py        # movement, BFS, exploration
+│   └── occupancy_grid.py   # world/grid representation
+├── mapping/
+│   └── semantic_map.py     # grid-based semantic memory
+├── perception/
+│   └── perception.py       # YOLO detector and label mapping
+├── language/
+│   ├── clip_resolver.py    # CLIP query-to-label resolution
+│   └── goal_navigator.py   # two-stage goal execution
+├── tests/
+│   └── test_semantic_map.py
+└── README.md
 ```
 
----
+## What It Does
 
-## 🚀 Phase 0: Environment Setup
+1. Explore an AI2-THOR scene using frontier-based navigation.
+2. Update an occupancy grid from motion and visibility.
+3. Run YOLO on each frame and add detections to a semantic map.
+4. Use CLIP to match a natural-language query to a semantic label.
+5. Find the best known cell for that label, or explore until it is observed.
+6. Navigate to the target cell and confirm the object in view.
 
-### 1. Prerequisites
-Ensure you have [Conda](https://conda.io) installed. This setup is optimized for Apple Silicon (M1/M2/M3 chips) using the MPS backend, but works on standard CUDA/CPU configurations.
+## Example Use
 
-### 2. Installation
-Clone the repository and build the dedicated environment:
+The primary demo scripts are:
+
+* `explore.py` for exploration + semantic mapping
+* `goal_seek.py` for the full language-to-navigation pipeline
+
+Example goal queries:
+
+* `a refrigerator`
+* `something I can drink from`
+* `something used to cook food`
+* `a household appliance`
+
+## Setup
+
+This project assumes Python 3.10+ and AI2-THOR. It has been developed on macOS with a local virtual environment, but the code path is simulator-agnostic as long as the dependencies are available.
 
 ```bash
-# Clone the repository
-git clone https://github.com
-cd YOUR-REPO-NAME
+git clone <your-repo-url>
+cd embodied-semantic-nav
 
-# Create and activate environment
-conda create -n embodied-nav python=3.10 -y
-conda activate embodied-nav
+python3 -m venv .venv
+source .venv/bin/activate
 
-# Install Core Dependencies
-pip install torch torchvision
-pip install ultralytics transformers ai2thor
-pip install numpy matplotlib opencv-python networkx
+pip install --upgrade pip
+pip install ai2thor ultralytics torch torchvision numpy matplotlib opencv-python pillow pytest
+pip install git+https://github.com/openai/CLIP.git
 ```
 
-### 3. Verification
-Verify your simulator environment works by running the initialization test script:
+Notes:
+
+* `CLIP` is installed from the OpenAI repository and used by `language/clip_resolver.py`.
+* YOLO weights are loaded from `perception/yolov8s.pt`.
+* The first AI2-THOR launch may download scene assets.
+
+## Run
+
+Explore and build the semantic map:
 
 ```bash
-python -c "from ai2thor.controller import Controller; controller = Controller(scene='FloorPlan1', width=300, height=300); event = controller.step(action='MoveAhead'); print('Agent Position:', event.metadata['agent']['position']); controller.stop()"
+python explore.py
 ```
-*Note: The first run auto-downloads kitchen assets (~2–3 minutes).*
 
----
+Run the full natural-language goal pipeline:
 
-## 📅 Development Roadmap
+```bash
+python goal_seek.py
+```
 
-- [x] **Phase 0:** Environment Setup & Simulator Verification
-- [ ] **Phase 1:** Active Perception & Object Detection (YOLOv8 Integration)
-- [ ] **Phase 2:** Semantic Mapping & Topology Graph Construction
-- [ ] **Phase 3:** Open-Vocabulary Goal Targeting (CLIP Integration)
-- [ ] **Phase 4:** Navigation Policy Evaluation & Benchmark Reporting
+## Results Snapshot
 
----
+The current implementation already produces a semantic map and a goal-resolution pipeline. For the final public release, I recommend adding a small quantitative table here with:
 
-## 📄 License
-This project is licensed under the MIT License - see the LICENSE file for details.
+* CLIP label-resolution accuracy across 10+ queries
+* navigation success rate on held-out target objects
+* map coverage or number of unique cells explored
+* average steps per successful goal
+
+## Limitations
+
+This is a practical robotics prototype, not a full SLAM system.
+
+Known limitations:
+
+* The semantic map is built from detector observations, so it depends on what the agent has already seen.
+* CLIP currently resolves against a candidate label set rather than unrestricted open-vocabulary entities.
+* Navigation is discrete and grid-based, so it is not optimal in continuous space.
+* Detector noise can still introduce false positives or semantically ambiguous labels.
+
+## What To Add Next
+
+Phase 6 should focus on public-facing polish:
+
+* record a demo video with frame capture
+* add a concise architecture diagram
+* include the results table from evaluation runs
+* add a short section explaining design choices and failure cases
+
+## Suggested License
+
+If you plan to publish this openly, add a license file before sharing the repository publicly.
