@@ -21,6 +21,7 @@ This repository is organized around the following phases:
 
 ## Pipeline
 
+```mermaid
 flowchart LR
 	A["User query\n'Find something I can drink from'"] --> B[CLIP text encoding]
 	B --> C[Semantic label ranking]
@@ -37,7 +38,7 @@ flowchart LR
 
 	M[Frontier explorer] --> N[Occupancy grid]
 	N --> G
-
+```
 
 ## Repository Layout
 
