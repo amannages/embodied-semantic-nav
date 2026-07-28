@@ -21,13 +21,12 @@ This repository is organized around the following phases:
 
 ## Pipeline
 
-```mermaid
 flowchart LR
-	A[User query\n"Find something I can drink from"] --> B[CLIP text encoding]
+	A["User query\n'Find something I can drink from'"] --> B[CLIP text encoding]
 	B --> C[Semantic label ranking]
-	C --> D[Best label\n"Mug"]
+	C --> D["Best label\n'Mug'"]
 	D --> E[SemanticMap lookup]
-	E --> F[Best known cell\nor nearest matching cell]
+	E --> F["Best known cell\nor nearest matching cell"]
 	F --> G[Navigator BFS]
 	G --> H[AI2-THOR movement]
 	H --> I[Goal reached / target confirmed]
@@ -38,7 +37,7 @@ flowchart LR
 
 	M[Frontier explorer] --> N[Occupancy grid]
 	N --> G
-```
+
 
 ## Repository Layout
 
