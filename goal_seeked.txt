@@ -18,31 +18,31 @@ Exploration ended after 401 steps.
   Book                 | seen   1x | best conf: 0.48 | best pos: (0.25, 1.25)
   Bottle               | seen  27x | best conf: 0.71 | best pos: (-0.50, -1.25)
   Bowl                 | seen  25x | best conf: 0.88 | best pos: (-1.00, -1.75)
-  Chair                | seen   6x | best conf: 0.65 | best pos: (-1.25, -1.25)
-  DiningTable          | seen   8x | best conf: 0.57 | best pos: (0.75, 1.25)
-  Fridge               | seen  33x | best conf: 0.97 | best pos: (1.00, -0.25)
+  Chair                | seen   6x | best conf: 0.66 | best pos: (-1.25, -1.25)
+  DiningTable          | seen   8x | best conf: 0.56 | best pos: (0.75, 1.25)
+  Fridge               | seen  35x | best conf: 0.97 | best pos: (1.00, -0.25)
   HousePlant           | seen  46x | best conf: 0.94 | best pos: (-1.25, -1.50)
   Microwave            | seen  32x | best conf: 0.87 | best pos: (-0.25, -1.75)
-  Mug                  | seen   8x | best conf: 0.81 | best pos: (-1.00, -1.25)
-  Sink                 | seen  33x | best conf: 0.85 | best pos: (-0.75, -1.25)
+  Mug                  | seen   7x | best conf: 0.81 | best pos: (-1.00, -1.25)
+  Sink                 | seen  32x | best conf: 0.85 | best pos: (-0.75, -1.25)
   StoveKnob            | seen  26x | best conf: 0.94 | best pos: (-1.25, -0.25)
-  Television           | seen   1x | best conf: 0.37 | best pos: (0.25, -1.75)
-  Toaster              | seen   4x | best conf: 0.69 | best pos: (0.50, -1.25)
+  Television           | seen   1x | best conf: 0.36 | best pos: (0.25, -1.75)
+  Toaster              | seen   4x | best conf: 0.68 | best pos: (0.50, -1.25)
   Vase                 | seen   7x | best conf: 0.74 | best pos: (-1.25, -1.75)
   bench                | seen  12x | best conf: 0.81 | best pos: (0.00, 2.00)
-  cake                 | seen   1x | best conf: 0.73 | best pos: (0.75, 1.25)
+  cake                 | seen   1x | best conf: 0.74 | best pos: (0.75, 1.25)
   clock                | seen   2x | best conf: 0.70 | best pos: (2.00, -1.25)
-  keyboard             | seen   2x | best conf: 0.75 | best pos: (-1.25, -1.50)
-  kite                 | seen   5x | best conf: 0.85 | best pos: (0.50, -1.25)
-  laptop               | seen   2x | best conf: 0.66 | best pos: (-1.25, 0.50)
-  mouse                | seen   2x | best conf: 0.93 | best pos: (0.00, -1.25)
-  person               | seen   2x | best conf: 0.55 | best pos: (-0.50, -1.25)
+  keyboard             | seen   2x | best conf: 0.76 | best pos: (-1.25, -1.50)
+  kite                 | seen   3x | best conf: 0.86 | best pos: (0.50, -1.25)
+  laptop               | seen   2x | best conf: 0.67 | best pos: (-1.25, 0.50)
+  mouse                | seen   2x | best conf: 0.92 | best pos: (0.00, -1.25)
+  person               | seen   1x | best conf: 0.54 | best pos: (-0.50, -1.25)
   snowboard            | seen   1x | best conf: 0.58 | best pos: (-0.25, -1.25)
-  stop sign            | seen   6x | best conf: 0.41 | best pos: (-1.00, 0.50)
+  stop sign            | seen   5x | best conf: 0.43 | best pos: (-1.00, 0.50)
   surfboard            | seen   3x | best conf: 0.57 | best pos: (-0.25, -1.25)
   toilet               | seen   1x | best conf: 0.54 | best pos: (-1.25, -1.50)
   traffic light        | seen   2x | best conf: 0.54 | best pos: (-0.25, 1.25)
-  umbrella             | seen   3x | best conf: 0.40 | best pos: (-1.00, 0.25)
+  umbrella             | seen   3x | best conf: 0.42 | best pos: (-1.00, 0.25)
 ===================
 
 ============================================================
@@ -68,7 +68,7 @@ Target located at: (49, 54)
 Navigating to target...
 
 Navigating to 'Fridge' at grid cell (49, 54)...
-Target 'Fridge' detected in view with confidence 0.72. Stopping navigation.
+Target 'Fridge' detected in view with confidence 0.73. Stopping navigation.
 
 ============================================================
 Goal complete: Found 'Fridge'
